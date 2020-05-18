@@ -8,7 +8,22 @@ La idea es que se pueda usar como una biblioteca.
 Un ejemplo de uso para implementar una utilidad por línea de comandos se encuentra en `examples/rae_scraper.dart`.
 
 
-Para usar la biblioteca, simplemente basta con añadir `import 'package:rae_scraper/rae_scraper.dart';`.
+
+Para usar la biblioteca, simplemente basta con añadir la dependencia en el _pubspec.yaml_ del proyecto:
+
+```
+dependencies:
+  rae_scraper:
+    git:
+      url: git://github.com/Foo-Manroot/rae_scraper.git
+      ref: master
+```
+
+e importartla en el archivo actual:
+
+```
+import 'package:rae_scraper/rae_scraper.dart';
+```
 
 
 Una vez importado el paquete, se pueden obtener las definiciones instanciando un objeto tal como se muestra aquí:
