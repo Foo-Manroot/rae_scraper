@@ -79,6 +79,9 @@ class Scraper {
                 ..headers.add (io.HttpHeaders.userAgentHeader, this.userAgent)
         ;
 
+        /* No se espera que haya más peticiones cercanas en el tiempo, por lo que no
+        conviene dejar la conexión abierta */
+        cliente.close ();
         return petic.close ();
     }
 
