@@ -29,7 +29,10 @@ void main (List<String> argv) {
             default:
                 Scraper a = Scraper ();
                 print (a.toString ());
-                a.obtenerDef (argv [0]);
+                a.obtenerDef (
+                    argv [0],
+                    manejadorExcepc: (e) => print ("Excepción => $e")
+                );
         }
 
     } else {

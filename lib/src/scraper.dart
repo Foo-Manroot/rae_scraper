@@ -108,14 +108,35 @@ class Scraper {
      *
      * @param palabra: [String]
      *          Palabra cuya definición se quiere obtener.
+     *
+     * @param manejadorExcepc: [Function(Exception)]
+     *          Función a ejecutar si se produce alguna excepción al realizar la
+     *      petición HTTP. Si no se especifica, se ignora cualquier excepción.
+     *
+     * @return
+     *          El resultado (cuando se complete el GET)
+     *          ó
+     *          null, si no se pudo obtener la definición
      */
-    Future<Resultado> obtenerDef (String palabra) async {
+    Future<Resultado> obtenerDef (String palabra,
+        { Function (Exception) manejadorExcepc = null }
+    ) async {
 
-        io.HttpClientResponse respuesta = await realizarGet (this.url + "/" + palabra);
         String html = "";
-        await for (var texto in respuesta.transform (Utf8Decoder ())) {
+        try {
+            io.HttpClientResponse respuesta = await realizarGet (
+                this.url + "/" + palabra
+            );
+            await for (var texto in respuesta.transform (Utf8Decoder ())) {
 
-             html += texto;
+                html += texto;
+            }
+        } catch (e) {
+
+            if (manejadorExcepc != null) {
+
+                manejadorExcepc (e);
+            }
         }
 
         dom.Document domRespuesta = parse (html, encoding: "utf-8");
@@ -149,6 +170,11 @@ class Scraper {
         */
         dom.Element resultados = domRespuesta.getElementById ("resultados");
 
+        if ( (resultados == null) || (resultados.children.length <= 0)) {
+
+            return null;
+        }
+
         List<Entrada> entradas = [];
         List<String> otras = [];
         for (dom.Element elem in resultados.children) {
@@ -175,8 +201,8 @@ class Scraper {
         }
 
         Resultado res = new Resultado (entradas, otras);
-
-        if (res.entradas.isEmpty) {
+/*
+        if ((res == null) || res.entradas.isEmpty) {
 
             print ("¡ERROR! No se ha encontrado ningún resultado\n");
             res = null;
@@ -185,8 +211,8 @@ class Scraper {
 
             res.mostrarResultados ();
         }
-
-        return res;
+*/
+        return (res == null || res.entradas.isEmpty)? null : res;
     }
 
 }
