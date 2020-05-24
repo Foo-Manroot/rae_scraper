@@ -12,16 +12,28 @@ import 'modelos/Resultado.dart';
  */
 class Scraper {
 
+    /**
+     * Cadena con la descripción del último error producido.
+     */
+    String reason = null;
+
     String userAgent = "Mozilla/5.0 (X11; Linux x86_64; rv:75.0) "
                     + "Gecko/20100101 Firefox/75.0";
 
     final String url;
+
+
+    final io.HttpClient _cliente = io.HttpClient ();
 
     /******************/
     /******************/
 
     /**
      * Constructor.
+     *
+     * ¡ATENCIÓN!
+     * Es muy importante llamar al método [dispose()] al terminar, para evitar fugas de
+     * memoria y ceerrar todas las conexiones que se hayan quedado abiertas.
      *
      * @param url: [String]
      *          URL base sobre la que hacer peticiones
@@ -32,6 +44,10 @@ class Scraper {
     /**
      * Constructor por defecto.
      * En este caso, la URL de base es https://dle.rae.es
+     *
+     * ¡ATENCIÓN!
+     * Es muy importante llamar al método [dispose()] al terminar, para evitar fugas de
+     * memoria y ceerrar todas las conexiones que se hayan quedado abiertas.
      *
      * Dependiendo de cuál sea el recurso objetivo, es posible que sea importante que
      * 'url' no acabe en '/'
@@ -50,6 +66,7 @@ class Scraper {
         return "Atributos de esta instancia de 'Scraper':\n"
             + "=> User-Agent: ${this.userAgent}\n"
             + "=> URL: ${this.url}\n"
+            + "=> Cliente HTTP: ${this._cliente}\n"
         ;
     }
 
@@ -63,51 +80,31 @@ class Scraper {
      * Realiza una petición a la URL especificada y devuelve el contenido
      *
      * @param recurso: [String]
-     *          URL a la que se va a hacer la petición.
+     *          URL a la que se va a hacer la petición. Se da por hecho que la URL ya
+     *      viene codificada para URL. En este método no se hace ninguna conversión.
      *
      * @return: [io.HttpClientResponse]
      */
-    Future<io.HttpClientResponse> realizarGet (String url) async {
-
-        io.HttpClient cliente = new io.HttpClient ();
+    Future<io.HttpClientResponse> _realizarGet (String url) async {
 
         Uri uri = Uri.parse (url).normalizePath ();
 
-        print ("Realizando petición a ${uri}");
-
-        var petic = await cliente.getUrl (uri)
+        var petic = await _cliente.getUrl (uri)
                 ..headers.add (io.HttpHeaders.userAgentHeader, this.userAgent)
+                ..followRedirects = true
+                ..maxRedirects = 3
         ;
 
-        /* No se espera que haya más peticiones cercanas en el tiempo, por lo que no
-        conviene dejar la conexión abierta */
-        cliente.close ();
         return petic.close ();
     }
 
 
     /**
-     * En base al elemento de entrada, obtiene todas las entradas (elementos de tipo
-     * 'article') y sus acepciones.
-     *
-     * @param resultados: [dom.Element]
-     *          Elemento con id="resultados" que contiene todas las entradas en el
-     *
-     *
-     * @return: [List<Entrada>]
-     *          Una lista con todas las entradas encontradas.
-     */
-    List<Entrada> obtenerEntradas (dom.Element resultados) {
-
-        return [];
-    }
-
-
-    /**
-     * Dada una palabra, obtiene su definición
+     * Dada una palabra, obtiene su definición.
      *
      * @param palabra: [String]
-     *          Palabra cuya definición se quiere obtener.
+     *          Palabra cuya definición se quiere obtener. El contenido se normaliza
+     *      (codificar en URL, poner en minúsculas...) dentro de esta función.
      *
      * @param manejadorExcepc: [Function(Exception)]
      *          Función a ejecutar si se produce alguna excepción al realizar la
@@ -116,7 +113,8 @@ class Scraper {
      * @return
      *          El resultado (cuando se complete el GET)
      *          ó
-     *          null, si no se pudo obtener la definición
+     *          null, si no se pudo obtener la definición. La razón se podrá obtener
+     *          usando el atributo [reason].
      */
     Future<Resultado> obtenerDef (String palabra,
         { Function (Exception) manejadorExcepc = null }
@@ -124,8 +122,8 @@ class Scraper {
 
         String html = "";
         try {
-            io.HttpClientResponse respuesta = await realizarGet (
-                this.url + "/" + palabra
+            io.HttpClientResponse respuesta = await _realizarGet (
+                this.url + "/" + Uri.decodeComponent (palabra)
             );
             await for (var texto in respuesta.transform (Utf8Decoder ())) {
 
@@ -137,6 +135,8 @@ class Scraper {
 
                 manejadorExcepc (e);
             }
+            this.reason = e.toString ();
+            return null;
         }
 
         dom.Document domRespuesta = parse (html, encoding: "utf-8");
@@ -201,18 +201,27 @@ class Scraper {
         }
 
         Resultado res = new Resultado (entradas, otras);
-/*
+
         if ((res == null) || res.entradas.isEmpty) {
 
-            print ("¡ERROR! No se ha encontrado ningún resultado\n");
+            this.reason = "¡ERROR! No se ha encontrado ningún resultado\n";
             res = null;
-
-        } else {
-
-            res.mostrarResultados ();
         }
-*/
+
         return (res == null || res.entradas.isEmpty)? null : res;
+    }
+
+
+
+    /**
+     * Es muy importante llamar a este método al terminar de usar el objeto, para evitar
+     * fugas de memoria y ceerrar todas las conexiones que se hayan quedado abiertas.
+     *
+     * Tras llamar a este método no se debería volver a usar este método.
+     */
+    void dispose () {
+
+        this._cliente.close ();
     }
 
 }

@@ -2,7 +2,7 @@ import 'package:rae_scraper/rae_scraper.dart';
 
 
 
-void main (List<String> argv) {
+void main (List<String> argv) async {
 
 
     String texto_ayuda = "Uso: dart cli_scraper.dart [opciones | <PALABRA>]\n"
@@ -29,10 +29,12 @@ void main (List<String> argv) {
             default:
                 Scraper a = Scraper ();
                 print (a.toString ());
-                a.obtenerDef (
+                Resultado res = await a.obtenerDef (
                     argv [0],
                     manejadorExcepc: (e) => print ("Excepción => $e")
                 );
+                res.mostrarResultados ();
+                a.dispose ();
         }
 
     } else {
