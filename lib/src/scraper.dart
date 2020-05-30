@@ -123,7 +123,7 @@ class Scraper {
         String html = "";
         try {
             io.HttpClientResponse respuesta = await _realizarGet (
-                this.url + "/" + Uri.decodeComponent (palabra)
+                this.url + "/" + Uri.encodeComponent (palabra)
             );
             await for (var texto in respuesta.transform (Utf8Decoder ())) {
 
