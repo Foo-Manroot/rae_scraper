@@ -29,12 +29,14 @@ void main (List<String> argv) async {
             default:
                 Scraper a = Scraper ();
                 print (a.toString ());
-                Resultado res = await a.obtenerDef (
+                a.obtenerDef (
                     argv [0],
                     manejadorExcepc: (e) => print ("Excepción => $e")
+                ).then (
+                    (Resultado res) => (res == null)? null :  res.mostrarResultados ()
+                ).whenComplete (
+                    () => a.dispose ()
                 );
-                res.mostrarResultados ();
-                a.dispose ();
         }
 
     } else {

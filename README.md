@@ -28,12 +28,14 @@ import 'package:rae_scraper/rae_scraper.dart';
 
 Una vez importado el paquete, se pueden obtener las definiciones instanciando un objeto tal como se muestra aquí:
 ```
-Scraper a = Scraper ();
-a.obtenerDef ([PALABRA A BUSCAR]);
-a.dispose ();
+Scraper s = Scraper ();
+s.obtenerDef ([PALABRA A BUSCAR])
+    .whenComplete (
+        () => s.dispose ()
+    );
 ```
 
-**¡ATENCIÓN!** Es _muy importante_ llamar al método `.dispose()` al terminar, para evitar fugas de memoria y ceerrar todas las conexiones que se hayan quedado abiertas.
+**¡ATENCIÓN!** Es _muy importante_ llamar al método `.dispose()` al terminar, para evitar fugas de memoria y cerrar todas las conexiones que se hayan quedado abiertas.
 
 
 Esto devuelve los resultados obtenidos y los muestra por pantalla.

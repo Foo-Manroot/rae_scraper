@@ -3,6 +3,7 @@ import 'package:html/dom.dart' as dom;
 
 import 'Palabra.dart';
 import 'Definic.dart';
+import 'Uso.dart';
 
 /**
  * Clase para representar una acepción.
@@ -26,7 +27,7 @@ class Acepc extends Definic {
      * Especificaciones extra sobre el uso, como la zona en la que se usa, si es un
      * vulgarismo, etc.
      */
-    final List<String> uso;
+    final List<Uso> uso;
 
     /**
      * Texto plano de la acepción. Esta se compone de los elementos [Palabra.texto] de
@@ -51,7 +52,7 @@ class Acepc extends Definic {
      */
     Acepc (int this.num_acep, String this.gram, String this.texto
         , List<Palabra> this.palabras
-        , { ClaseAcepc clase = ClaseAcepc.manual, List<String> uso = null
+        , { ClaseAcepc clase = ClaseAcepc.manual, List<Uso> uso = null
             , String id = null
         }
     ):
@@ -79,7 +80,7 @@ class Acepc extends Definic {
         String gram = par.children [1].attributes ["title"];
 
         /* A veces hay una serie de <abbr> para especificar el uso */
-        List<String> uso = [ ];
+        List<Uso> uso = [ ];
         int idx = 2;
         dom.Node nodo;
 
@@ -95,7 +96,7 @@ class Acepc extends Definic {
                     break;
                 }
 
-                uso.add (nodo.attributes ["title"]);
+                uso.add (Uso (nodo.text, nodo.attributes ["title"].split (",")));
             }
 
             idx ++;

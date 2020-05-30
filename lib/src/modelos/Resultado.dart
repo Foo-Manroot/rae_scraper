@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'Entrada.dart';
 import 'Definic.dart';
 
 import 'enums.dart';
 import 'Acepc.dart';
 import 'Expr.dart';
+import 'Uso.dart';
 
 /**
  * Clase para representar el conjunto de entradas que conforman un resultado.
@@ -28,15 +31,15 @@ class Resultado {
 
 
     /**
-     * Imprime por pantalla los resultados
+     * Devuelve un texto con la información de este resultado en formato legible.
      */
-    void mostrarResultados () {
+    String obtenerTexto () {
 
-        print ("Entradas:\n");
+        String ret_val = "Entradas:\n\n";
         for (Entrada e in entradas) {
 
-            print ("\n${e.title}");
-            print ("-> Etimología: ${e.etim}");
+            ret_val += "\n${e.title}\n";
+            ret_val += "-> Etimología: ${e.etim}\n";
 
             for (Definic d in e.definiciones) {
 
@@ -45,40 +48,62 @@ class Resultado {
                     case ClaseAcepc.manual:
                     case ClaseAcepc.normal:
                         Acepc acepc = (d as Acepc);
-                        print ("${acepc.num_acep}. ${acepc.gram} "
-                                + "| ${acepc.uso} | ${acepc.texto}");
+
+                        String usos = "";
+                        for (Uso u in acepc.uso) {
+
+                            usos += u.abrev + " ";
+                        }
+
+                        ret_val += ("${acepc.num_acep}. ${acepc.gram} "
+                                + "| ${usos}${acepc.texto}\n");
                         break;
 
                     case ClaseAcepc.frase_hecha:
                         Expr expr = (d as Expr);
-                        print ("-> ${expr.texto}");
+
+                        ret_val += "-> ${expr.texto}\n";
                         for (Acepc def in expr.definiciones) {
 
-                            print ("${def.num_acep}. ${def.gram} "
-                                + "| ${def.uso} | ${def.texto}");
+                            String usos = "";
+                            for (Uso u in def.uso) {
+
+                                usos += u.abrev + " ";
+                            }
+
+                            ret_val += ("${def.num_acep}. ${def.gram} "
+                                + "| ${usos}${def.texto}\n");
                         }
                         break;
 
                     case ClaseAcepc.enlace:
                         Acepc acepc = (d as Acepc);
-                        print ("${acepc.texto}");
+                        ret_val += "${acepc.texto}\n";
 
                         break;
 
                     default:
-                        print ("-> ${d.toString ()}");
+                        ret_val += "-> ${d.toString ()}\n";
                 }
             }
         }
 
 
-        print ("\n======\n");
-        print ("Otras entradas:\n");
+        ret_val += "\n======\n\n";
+        ret_val += "Otras entradas:\n\n";
         for (String o in otras) {
 
-            print ("-> ${o}\n");
+            ret_val += "-> ${o}\n\n";
         }
+
+        return ret_val;
     }
+
+
+    /**
+     * Imprime por pantalla los resultados
+     */
+    void mostrarResultados () => stdout.write (this.obtenerTexto ());
 
 
 
