@@ -1,5 +1,7 @@
 import 'dart:async';
-import 'Entrada.dart';
+
+import 'Resultado.dart';
+import '../scraper.dart';
 
 
 /**
@@ -64,17 +66,34 @@ class Palabra {
      * Realiza una petición a [urlBase]/?e=1&id=[dataId]&w=[texto] para obtener las
      * definiciones de esta palabra.
      *
-     * @param urlBase: [String]
-     *          URL sobre a que pedir el recurso especificado. No debería acabar en "/",
-     *      aunque es posible que no sea un problema.
+     * @param scraper: [Scraper]
+     *          Objeto encargado de realizar las peticiones.
+     *
+     * @param manejadorExcepc: [Function(Exception)]
+     *          Función a ejecutar si se produce alguna excepción al realizar la
+     *      petición HTTP. Si no se especifica, se ignora cualquier excepción.
+     *
+     * @param manejadorError: [Function(Error)]
+     *          Función a ejecutar si se produce alguna excepción al realizar la
+     *      petición HTTP. Si no se especifica, se ignora cualquier excepción.
      *
      *
-     * @return: [List<Entrada>]
-     *          Una lista con todas las entradas relativas a esta palabra.
+     * @return
+     *          El resultado (cuando se complete el GET)
+     *          ó
+     *          null, si no se pudo obtener la definición. La razón se podrá obtener
+     *          usando el atributo [this.reason].
      */
-    Future<List<Entrada>> obtenerDef ([String urlBase = "https://dle.rae.es"]) async {
+    Future<Resultado> obtenerDef (
+        Scraper scraper,
+         { Function (Exception) manejadorExcepc = null,
+        Function (Error) manejadorError = null }
+    ) async {
 
-        return [];
+        return scraper.buscarPalabra (this,
+            manejadorError: manejadorError,
+            manejadorExcepc: manejadorExcepc
+        );
     }
 
     /**

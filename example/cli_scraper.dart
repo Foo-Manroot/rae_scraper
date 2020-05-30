@@ -31,12 +31,33 @@ void main (List<String> argv) async {
                 print (a.toString ());
                 a.obtenerDef (
                     argv [0],
-                    manejadorExcepc: (e) => print ("Excepción => $e")
+                    manejadorExcepc: (e) => print ("Excepción en petic. 1 => $e"),
+                    manejadorError: (e) => print ("Excepción en petic. 1 => $e")
+                ).then (
+                    (Resultado res) => (res == null)? null :  res.mostrarResultados ()
+//                ).whenComplete (
+//                    () => a.dispose ()
+                );
+
+                /********************/
+               /* Segunda petición */
+                /********************/
+
+                Palabra p = Palabra (
+                      "asdf", dataId: "XhbjsNo#ETrKQH3"
+                );
+
+                p.obtenerDef (
+                    a,
+                    manejadorExcepc: (e) => print ("Excepción en petic. 2 => $e"),
+                    manejadorError: (e) => print ("Excepción en petic. 2 => $e")
                 ).then (
                     (Resultado res) => (res == null)? null :  res.mostrarResultados ()
                 ).whenComplete (
                     () => a.dispose ()
                 );
+
+
         }
 
     } else {

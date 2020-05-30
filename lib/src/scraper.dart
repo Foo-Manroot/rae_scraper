@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:io' as io;
-import 'dart:convert' show Utf8Decoder;
+import 'dart:convert' show Utf8Decoder, jsonDecode;
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart' as dom;
 
 import 'modelos/Entrada.dart';
 import 'modelos/Resultado.dart';
+import 'modelos/Palabra.dart';
 
 /**
  * Scraper para obtener definiciones de la RAE.
@@ -89,6 +90,8 @@ class Scraper {
 
         Uri uri = Uri.parse (url).normalizePath ();
 
+        print ("Petición a ${url}.");
+
         var petic = await _cliente.getUrl (uri)
                 ..headers.add (io.HttpHeaders.userAgentHeader, this.userAgent)
                 ..followRedirects = true
@@ -96,6 +99,135 @@ class Scraper {
         ;
 
         return petic.close ();
+    }
+
+
+    /**
+     * Dado un objeto de tipo [Palabra], obtiene su definición.
+     *
+     * @param palabra: [Palabra]
+     *          Objeto que contiene la información a buscar.
+     *
+     * @param manejadorExcepc: [Function(Exception)]
+     *          Función a ejecutar si se produce alguna excepción al realizar la
+     *      petición HTTP. Si no se especifica, se ignora cualquier excepción.
+     *
+     * @param manejadorError: [Function(Error)]
+     *          Función a ejecutar si se produce alguna excepción al realizar la
+     *      petición HTTP. Si no se especifica, se ignora cualquier excepción.
+     *
+     *
+     * @return
+     *          El resultado (cuando se complete el GET)
+     *          ó
+     *          null, si no se pudo obtener la definición. La razón se podrá obtener
+     *          usando el atributo [this.reason].
+     */
+    Future<Resultado> buscarPalabra (Palabra palabra,
+        { Function (Exception) manejadorExcepc = null,
+        Function (Error) manejadorError = null }
+    ) async {
+
+        /* Si no hay enlace, busca por palabra */
+        if (palabra.enlaceRecurso == null) {
+
+            return this.obtenerDef (palabra.texto,
+                manejadorExcepc: manejadorExcepc,
+                manejadorError: manejadorError
+            );
+        }
+
+        String html = "";
+        try {
+            io.HttpClientResponse respuesta = await _realizarGet (
+                this.url + palabra.enlaceRecurso
+            );
+            await for (var texto in respuesta.transform (Utf8Decoder ())) {
+
+                html += texto;
+            }
+        } catch (e) {
+
+            /* Si llega una excepción de tipo "Error" no se puede usar este manejador */
+            if ((e is Exception) && (manejadorExcepc != null)) {
+
+                manejadorExcepc (e);
+
+            } else if ((e is Error) && (manejadorError != null)) {
+
+                manejadorError (e);
+            }
+
+            this.reason = e.toString ();
+            return null;
+        }
+
+        var json = jsonDecode (html);
+        /* El único atributo que interesa es "html" */
+        if (json ["html"] == null) {
+
+            this.reason = "No such key 'html' in JSON: $json";
+            return null;
+        }
+
+        /* En el atributo "html" de json se encuentra toda la información, estructurada
+        del siguiente modo:
+            <article id="...">
+            ├── <header> <-- Debería ser title="Definición de <palabra>"
+            ├── <p class="n2"> <-- Etimología
+            └── <p class="??"> <-- Acepción
+
+            Las acepciones pueden ser de distinto tipo, indicado por su clase:
+                j
+                j2
+                    Definición
+
+                k5 (+m)
+                    Expresión. En el siguiente elemento, con clase "m", está su
+                    definición
+
+                l
+                l3
+                    Entradas secundarias. Enlaces a otras entradas. Por ejemplo: dentro
+                    de "gato" aparece "ojo de gato" con clase "l", que redirige a la
+                    definición principal, dentro de "ojo".
+        */
+        dom.Element resultados = parse (json ["html"], encoding: "utf-8").body;
+
+        List<Entrada> entradas = [];
+        List<String> otras = [];
+        for (dom.Element elem in resultados.children) {
+
+            switch (elem.localName) {
+
+                case "article":
+                    entradas.add (new Entrada.article (elem));
+                    break;
+
+                case "div":
+                    if (elem.className == "otras") {
+
+                        for (dom.Element enlace in elem.querySelectorAll ("a")) {
+
+                            if (enlace.attributes.containsKey ("href")) {
+
+                                otras.add (enlace.attributes ["href"]);
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
+
+        Resultado res = new Resultado (entradas, otras);
+
+        if ((res == null) || res.entradas.isEmpty) {
+
+            this.reason = "¡ERROR! No se ha encontrado ningún resultado\n";
+            res = null;
+        }
+
+        return (res == null || res.entradas.isEmpty)? null : res;
     }
 
 
@@ -110,14 +242,20 @@ class Scraper {
      *          Función a ejecutar si se produce alguna excepción al realizar la
      *      petición HTTP. Si no se especifica, se ignora cualquier excepción.
      *
+     * @param manejadorError: [Function(Error)]
+     *          Función a ejecutar si se produce alguna excepción al realizar la
+     *      petición HTTP. Si no se especifica, se ignora cualquier excepción.
+     *
+     *
      * @return
      *          El resultado (cuando se complete el GET)
      *          ó
      *          null, si no se pudo obtener la definición. La razón se podrá obtener
-     *          usando el atributo [reason].
+     *          usando el atributo [this.reason].
      */
     Future<Resultado> obtenerDef (String palabra,
-        { Function (Exception) manejadorExcepc = null }
+        { Function (Exception) manejadorExcepc = null,
+        Function (Error) manejadorError = null }
     ) async {
 
         String html = "";
@@ -131,10 +269,16 @@ class Scraper {
             }
         } catch (e) {
 
-            if (manejadorExcepc != null) {
+            /* Si llega una excepción de tipo "Error" no se puede usar este manejador */
+            if ((e is Exception) && (manejadorExcepc != null)) {
 
                 manejadorExcepc (e);
+
+            } else if ((e is Error) && (manejadorError != null)) {
+
+                manejadorError (e);
             }
+
             this.reason = e.toString ();
             return null;
         }
@@ -172,6 +316,7 @@ class Scraper {
 
         if ( (resultados == null) || (resultados.children.length <= 0)) {
 
+            this.reason = "Error parsing html: $html";
             return null;
         }
 
