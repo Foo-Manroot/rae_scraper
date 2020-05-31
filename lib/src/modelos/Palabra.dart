@@ -1,24 +1,33 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'dart:async';
 
 import 'Resultado.dart';
 import '../scraper.dart';
 
+/* Para la serialización */
+part 'Palabra.g.dart';
 
 /**
  * Clase para representar una palabra
  */
+@JsonSerializable(
+    fieldRename: FieldRename.snake,
+    explicitToJson: true
+)
 class Palabra {
 
     /**
      * Si se puede abreviar (por ejemplo, centímetro -> cm.), se usa este atributo para
      * almacenar la abreviatura.
      */
+    @JsonKey(defaultValue: null)
     final String abbr;
 
     /**
      * Texto completo de la palabra. Si se trata de una abreviatura, en este atributo se
      * almacenará la palabra completa. La abreviatura se encontrará en [abbr].
      */
+    @JsonKey(required: true)
     final String texto;
 
 
@@ -27,13 +36,30 @@ class Palabra {
      * se encarga de pedir <URL>/?e=1&id=[dataId]&w=[texto], lo que devuelve el HTML con
      * la definición de la palabra.
      */
+    @JsonKey(defaultValue: null)
     final String dataId;
 
     /**
      * Enlace al recurso necesario para obtener la definción de esta palabra, si está
      * disponible.
      */
-    final String enlaceRecurso;
+    @JsonKey(defaultValue: null)
+    String enlaceRecurso;
+
+    /*******************/
+    /** SERIALIZACIÓN **/
+    /*******************/
+    /* https://flutter.dev/docs/development/data-and-backend/json#code-generation */
+
+    /// A necessary factory constructor for creating a new User instance
+    /// from a map. Pass the map to the generated `_$UserFromJson()` constructor.
+    /// The constructor is named after the source class, in this case, User.
+    factory Palabra.fromJson(Map<String, dynamic> json) => _$PalabraFromJson (json);
+
+    /// `toJson` is the convention for a class to declare support for serialization
+    /// to JSON. The implementation simply calls the private, generated
+    /// helper method `_$UserToJson`.
+    Map<String, dynamic> toJson () => _$PalabraToJson (this);
 
 
     /*****************/
@@ -89,6 +115,11 @@ class Palabra {
          { Function (Exception) manejadorExcepc = null,
         Function (Error) manejadorError = null }
     ) async {
+
+        if (this.enlaceRecurso == null) {
+
+            this.enlaceRecurso = (this.dataId == null)? null : "/?e=1&id=${this.dataId}";
+        }
 
         return scraper.buscarPalabra (this,
             manejadorError: manejadorError,

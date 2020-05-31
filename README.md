@@ -41,6 +41,7 @@ s.obtenerDef ([PALABRA A BUSCAR])
 Esto devuelve los resultados obtenidos y los muestra por pantalla.
 El resultado que se devuelve es una instancia de la clase `Resultado` (en un `Future`, lo que hay que tener en cuenta si se quieren manipular estos resultados).
 
+
 Este resultado tiene los siguientes atributos (se puede consultar con más detalle el código fuente en `lib/src/modelos/Resultado.dart`):
   - `List<Entrada> entradas`: Lista de entradas aplicables a esta palabra
   - `List<String> otras`: Enlaces a otras entradas similares
@@ -63,7 +64,7 @@ En concreto, las clases implementadoras son:
 `Acepc`, una acepción normal. Sus atributos son:
   - `int num_acep`: Número de la acepción
   - `String gram`: Clasificación gramatical
-  - `List<String> uso`: Especificaciones extra sobre el uso, como la zona en la que se usa, si es un vulgarismo, etc.
+  - `List<Uso> uso`: Especificaciones extra sobre el uso, como la zona en la que se usa, si es un vulgarismo, etc.
   - `String texto`: Texto plano de la acepción.
   - `List<Palabra> palabras`:Objetos de tipo Palabra que componen esta acepción.
 
@@ -72,6 +73,11 @@ En concreto, las clases implementadoras son:
   - `String texto`: Texto de la expresión.
   - `List<Acepc> definiciones`: Lista de acepciones con las que se define esta frase hecha.
 
+
+
+`Uso` contiene la abreviatura usada para especificar cómo y dónde se usa esta acepción, y contiene los siguientes atributos:
+  - `String abrev`: Abreviatura (por ejemplo: _U._ para referirse a _Usado, usada, usados, usadas_).
+  - `List<String> significado`: Lista de posibles explicaciones de esa abreviatura. En el ejemplo anterior, sería `["Usado", "usada", "usados", "usadas"]`
 
 
 Por último, las unidades mínimas semánticas se almacenan en el objeto `Palabra`.
@@ -86,10 +92,12 @@ Sus atributos son:
 
 
 
+Para serializar y deserializar se pueden usar los métodos `.toJson()` y `.fromJson()`, respectivamente.
+
 ----
 
 
 **TODO**:
 
   1. Obtener la palabra del día
-  2. Implementar `Palabra.obtenerDef()`
+  2. Caché con los resultados para disminuir el consumo de red

@@ -1,3 +1,5 @@
+import 'package:json_annotation/json_annotation.dart';
+
 import 'enums.dart';
 import 'package:html/dom.dart' as dom;
 
@@ -5,9 +7,17 @@ import 'Palabra.dart';
 import 'Definic.dart';
 import 'Uso.dart';
 
+
+/* Para la serialización */
+part 'Acepc.g.dart';
+
 /**
  * Clase para representar una acepción.
  */
+@JsonSerializable(
+    fieldRename: FieldRename.snake,
+    explicitToJson: true
+)
 class Acepc extends Definic {
 
 
@@ -15,31 +25,51 @@ class Acepc extends Definic {
      * Número de acepción.
      * (<span class="n_acep">)
      */
+    @JsonKey(required: true)
     final int num_acep;
 
     /**
      * Clasificación gramatical.
      * (<abbr class="g" title="...">)
      */
+    @JsonKey(required: true)
     final String gram;
 
     /**
      * Especificaciones extra sobre el uso, como la zona en la que se usa, si es un
      * vulgarismo, etc.
      */
+    @JsonKey(defaultValue: [])
     final List<Uso> uso;
 
     /**
      * Texto plano de la acepción. Esta se compone de los elementos [Palabra.texto] de
      * [palabras].
      */
+    @JsonKey(required: true)
     final String texto;
 
     /**
      * Objetos de tipo Palabra que componen esta acepción.
      */
+    @JsonKey(required: true)
     final List<Palabra> palabras;
 
+
+    /*******************/
+    /** SERIALIZACIÓN **/
+    /*******************/
+    /* https://flutter.dev/docs/development/data-and-backend/json#code-generation */
+
+    /// A necessary factory constructor for creating a new User instance
+    /// from a map. Pass the map to the generated `_$UserFromJson()` constructor.
+    /// The constructor is named after the source class, in this case, User.
+    factory Acepc.fromJson(Map<String, dynamic> json) => _$AcepcFromJson (json);
+
+    /// `toJson` is the convention for a class to declare support for serialization
+    /// to JSON. The implementation simply calls the private, generated
+    /// helper method `_$UserToJson`.
+    Map<String, dynamic> toJson () => _$AcepcToJson (this);
 
 
     /*******************/
@@ -53,8 +83,7 @@ class Acepc extends Definic {
     Acepc (int this.num_acep, String this.gram, String this.texto
         , List<Palabra> this.palabras
         , { ClaseAcepc clase = ClaseAcepc.manual, List<Uso> uso = null
-            , String id = null
-        }
+            , String id = null }
     ):
         this.uso = (uso == null)? [] : uso
         , super (id, clase)

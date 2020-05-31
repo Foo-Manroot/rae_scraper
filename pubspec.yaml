@@ -5,7 +5,16 @@ description: >-
   día de la página oficial de la RAE.
 homepage: https://github.com/Foo-Manroot/rae_scraper
 documentation: https://github.com/Foo-Manroot/rae_scraper
+
 environment:
   sdk: '>=2.0.0'
+
 dependencies:
   html: ^0.14.0+3
+  # Serialización
+  json_serializable: ^3.3.0
+
+dev_dependencies:
+  # Serialización
+  json_serializable: ^3.3.0
+  build_runner: ^1.10.0

@@ -1,3 +1,4 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'dart:io';
 
 import 'Entrada.dart';
@@ -8,26 +9,53 @@ import 'Acepc.dart';
 import 'Expr.dart';
 import 'Uso.dart';
 
+/* Para la serialización */
+part 'Resultado.g.dart';
+
 /**
  * Clase para representar el conjunto de entradas que conforman un resultado.
  */
+@JsonSerializable(
+    fieldRename: FieldRename.snake,
+    explicitToJson: true
+)
 class Resultado {
 
     /**
      * Entradas mostradas en esta página.
      */
+    @JsonKey(required: true)
     final List<Entrada> entradas;
 
     /**
      * Lista con enlaces a otras entradas.
      */
+    @JsonKey(required: true)
     final List<String> otras;
+
+    /*******************/
+    /** SERIALIZACIÓN **/
+    /*******************/
+    /* https://flutter.dev/docs/development/data-and-backend/json#code-generation */
+
+    /// A necessary factory constructor for creating a new User instance
+    /// from a map. Pass the map to the generated `_$UserFromJson()` constructor.
+    /// The constructor is named after the source class, in this case, User.
+    factory Resultado.fromJson(Map<String, dynamic> json) => _$ResultadoFromJson (json);
+
+    /// `toJson` is the convention for a class to declare support for serialization
+    /// to JSON. The implementation simply calls the private, generated
+    /// helper method `_$UserToJson`.
+    Map<String, dynamic> toJson () => _$ResultadoToJson (this);
+
+
 
     /**
      * Constructor por defecto.
      * Simplemente inicializa los atributos con los valores proporcionados.
      */
     Resultado (List<Entrada> this.entradas, List<String> this.otras);
+
 
 
     /**
