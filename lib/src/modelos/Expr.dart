@@ -52,9 +52,12 @@ class Expr extends Definic {
     /**
      * Constructor por defecto.
      * Simplemente inicializa los atributos
+     *
+     * El parámetro "clase" se declara explícitamente para poder serializar correctamente
+     * (ver https://github.com/dart-lang/json_serializable/issues/274).
      */
     Expr (String this.texto
-        , { String id = null, List<Acepc> definiciones = null }
+        , { String id = null, List<Acepc> definiciones = null , ClaseAcepc clase}
     ):
         this.definiciones = (definiciones == null)? [] : definiciones
         , super (id, ClaseAcepc.frase_hecha)

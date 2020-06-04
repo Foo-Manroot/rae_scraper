@@ -40,7 +40,8 @@ abstract class Definic {
      * Al ser una clase abstracta, hay que crear un constructor propio:
      * https://github.com/dart-lang/json_serializable/issues/606#issuecomment-587993029
      */
-    factory Definic.fromJson(Map<String, dynamic> json) {
+    factory Definic.fromJson (Map<String, dynamic> json) {
+
 
         switch (json ["clase"]) {
 
@@ -55,8 +56,9 @@ abstract class Definic {
                 return Expr.fromJson (json);
 
             default:
-                throw ArgumentError ("Invalid value provided: ${json["clase"]}. "
-                                    " Should be one of ${ClaseAcepc.values}"
+                throw ArgumentError ("Invalid class value provided: ${json["clase"]}. "
+                                    "Should be one of ${ClaseAcepc.values}. "
+                                    "This JSON's keys are: ${json.keys}"
                 );
         }
     }
