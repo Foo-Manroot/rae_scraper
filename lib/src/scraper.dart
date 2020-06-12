@@ -18,13 +18,41 @@ class Scraper {
      */
     String reason = null;
 
+    /**
+     * User-Agent a enviar. La página oficial de la RAE bloquea las peticiones con
+     * determinados User-Agent
+     */
     String userAgent = "Mozilla/5.0 (X11; Linux x86_64; rv:75.0) "
                     + "Gecko/20100101 Firefox/75.0";
 
+    /**
+     * URL base sobre la que realizar las peticiones
+     */
     final String url;
 
-
+    /**
+     * Cliente usado para realizar las peticiones HTTP
+     */
     final io.HttpClient _cliente = io.HttpClient ();
+
+    /**
+     * Cache para aumentar disminuir el tráfico de red necesario.
+     * Cada entrada tiene como clave la URL y como valor tiene un mapa con la siguiente
+     * estructura:
+     * {
+     *      "html": <STRING>,
+     *      "insertado": <TIMESTAMP>
+     * }
+     * La fecha de inserción sirve para luego borrar las entradas antiguas si se llena la
+     * cache.
+     */
+    final Map<String, Map<String, dynamic>> _cache = {};
+
+    /**
+     * Configuración del número máximo de elementos permitidos en la cache.
+     * Cuando se llegue al límite, los nuevos elementos substituirán a los más antiguos.
+     */
+    int MAX_CACHE_SIZE = 100;
 
     /******************/
     /******************/
@@ -77,28 +105,92 @@ class Scraper {
     /* Implementación de métodos propios */
     /*****************************+*******/
 
+
     /**
-     * Realiza una petición a la URL especificada y devuelve el contenido
+     * Añade el valor especificado a la cache.
+     *
+     * @param clave
+     *      Clave usada para insertar en la cache.
+     *
+     * @param html
+     *      Texto de la respuesta sin interpretar devuelta por el servidor.
+     */
+    void _insertarEnCache (String clave, String html) {
+
+        int timestamp = DateTime.now ().millisecondsSinceEpoch;
+
+        if (_cache.length >= (MAX_CACHE_SIZE - 1)) {
+
+            /* Tiene que buscar primero la entrada más antigua y reemplazarla */
+            int timestamp_antiguo = timestamp;
+            String clave_antiguo = null;
+
+            _cache.forEach (
+                (String clave, Map<String, dynamic> valor) {
+
+                    /* Debe buscar el valor más antiguo => el que tenga menor timestamp */
+                    if (valor ["insertado"] <= timestamp_antiguo) {
+
+                        clave_antiguo = clave;
+                    }
+                }
+            );
+
+            _cache.removeWhere ( (k, _) => (k == clave_antiguo) );
+        }
+
+        _cache [clave] = { "html": html, "insertado": timestamp };
+    }
+
+    /**
+     * Realiza una petición a la URL especificada y devuelve el contenido.
+     *
+     * Toda excepción producida (por ejemplo, no poder contactar con el servidor) será
+     * responsabilidad de quien llamó a este método.
+     *
      *
      * @param recurso: [String]
      *          URL a la que se va a hacer la petición. Se da por hecho que la URL ya
      *      viene codificada para URL. En este método no se hace ninguna conversión.
      *
-     * @return: [io.HttpClientResponse]
+     * @return: [Future<String>]
+     *          El texto devuelto en la respuesta.
      */
-    Future<io.HttpClientResponse> _realizarGet (String url) async {
+    Future<String> _realizarGet (String url) async {
 
         Uri uri = Uri.parse (url).normalizePath ();
+        String contenido = "";
 
-        print ("Petición a ${url}.");
+        /* Aparte de por la ruta, las entradas pueden distinguirse por el parámetro id */
+        String clave = (
+            uri.path + (uri.queryParameters.containsKey ("id")?
+                uri.queryParameters ["id"]
+                : ""
+            )
+        );
 
-        var petic = await _cliente.getUrl (uri)
-                ..headers.add (io.HttpHeaders.userAgentHeader, this.userAgent)
-                ..followRedirects = true
-                ..maxRedirects = 3
-        ;
+        if (_cache.containsKey (clave)) {
 
-        return petic.close ();
+            print ("Cache hit with key $clave");
+            return _cache [clave]["html"];
+
+        } else {
+
+            var petic = await _cliente.getUrl (uri)
+                    ..headers.add (io.HttpHeaders.userAgentHeader, this.userAgent)
+                    ..followRedirects = true
+                    ..maxRedirects = 3
+            ;
+
+            io.HttpClientResponse respuesta = await petic.close ();
+            await for (var texto in respuesta.transform (Utf8Decoder ())) {
+
+                contenido += texto;
+            }
+            _insertarEnCache (clave, contenido);
+        }
+
+        return contenido;
     }
 
 
@@ -139,13 +231,9 @@ class Scraper {
 
         String html = "";
         try {
-            io.HttpClientResponse respuesta = await _realizarGet (
-                this.url + palabra.enlaceRecurso
-            );
-            await for (var texto in respuesta.transform (Utf8Decoder ())) {
 
-                html += texto;
-            }
+            html = await _realizarGet (this.url + palabra.enlaceRecurso);
+
         } catch (e) {
 
             /* Si llega una excepción de tipo "Error" no se puede usar este manejador */
@@ -260,13 +348,11 @@ class Scraper {
 
         String html = "";
         try {
-            io.HttpClientResponse respuesta = await _realizarGet (
-                this.url + "/" + Uri.encodeComponent (palabra)
-            );
-            await for (var texto in respuesta.transform (Utf8Decoder ())) {
 
-                html += texto;
-            }
+            html = await _realizarGet (
+                this.url + "/" + Uri.encodeComponent (palabra.trim ())
+            );
+
         } catch (e) {
 
             /* Si llega una excepción de tipo "Error" no se puede usar este manejador */

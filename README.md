@@ -100,4 +100,5 @@ Para serializar y deserializar se pueden usar los métodos `.toJson()` y `.fromJ
 **TODO**:
 
   1. Obtener la palabra del día
-  2. Caché con los resultados para disminuir el consumo de red
+  ~~2. Caché con los resultados para disminuir el consumo de red~~
+  3. Cuando se trate de un verbo, obtener la conjugación
