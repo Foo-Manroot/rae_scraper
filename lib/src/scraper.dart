@@ -159,11 +159,15 @@ class Scraper {
         Uri uri = Uri.parse (url).normalizePath ();
         String contenido = "";
 
-        /* Aparte de por la ruta, las entradas pueden distinguirse por el parámetro id */
+        /* Aparte de por la ruta, las entradas pueden distinguirse por los parámetros id
+        o 'q' */
         String clave = (
             uri.path + (uri.queryParameters.containsKey ("id")?
-                uri.queryParameters ["id"]
-                : ""
+                "?id=" + uri.queryParameters ["id"]
+                : (uri.queryParameters.containsKey ("q")?
+                    "?q=" + uri.queryParameters ["q"]
+                    : ""
+                )
             )
         );
 
@@ -453,6 +457,111 @@ class Scraper {
         return (res == null || res.entradas.isEmpty)? null : res;
     }
 
+
+    /**
+     * Obtiene una lista con las sugerencias a partir de la cadena indicada.
+     *
+     * @param sub: [String]
+     *              Cadena a partir de la cual formar las sugerencias.
+     */
+    Future<List<String>> obtenerSugerencias (String sub) async {
+
+        String resultado = await _realizarGet (this.url + "/srv/keys?q=" + sub);
+        List<String> lista = [];
+
+        try {
+
+            lista = jsonDecode (resultado).cast <String>();
+
+        } catch (e) {
+            _log.warning ("No se pudo decodificar en JSON: '$e'");
+        }
+
+        return lista;
+    }
+
+
+    /**
+     * Obtiene la palabra del día.
+     *
+     *
+     * @param manejadorExcepc: [Function(Exception)]
+     *          Función a ejecutar si se produce alguna excepción al realizar la
+     *      petición HTTP. Si no se especifica, se ignora cualquier excepción.
+     *
+     * @param manejadorError: [Function(Error)]
+     *          Función a ejecutar si se produce alguna excepción al realizar la
+     *      petición HTTP. Si no se especifica, se ignora cualquier excepción.
+     *
+     *
+     * @return
+     *          La [Palabra] (cuando se complete el GET)
+     *          ó
+     *          null, si no se pudo obtener la definición. La razón se podrá obtener
+     *          usando el atributo [this.reason].
+     */
+    Future<Palabra> palabraDelDia (
+        { Function (Exception) manejadorExcepc = null,
+        Function (Error) manejadorError = null }
+    ) async {
+
+        Palabra palabra;
+
+        /* Vale cualquier palabra para obtener la del día */
+        List<String> aleatorio = [ "hola", "tanto", "palabra", "día" ]..shuffle ();
+
+        String html = "";
+        try {
+
+            html = await _realizarGet (
+                this.url + "/" + Uri.encodeComponent (aleatorio.first)
+            );
+
+        } catch (e) {
+
+            /* Si llega una excepción de tipo "Error" no se puede usar este manejador */
+            if ((e is Exception) && (manejadorExcepc != null)) {
+
+                manejadorExcepc (e);
+
+            } else if ((e is Error) && (manejadorError != null)) {
+
+                manejadorError (e);
+            }
+
+            _log.severe (e.toString ());
+            this.reason = e.toString ();
+            return null;
+        }
+
+        dom.Document domRespuesta = parse (html, encoding: "utf-8");
+        /* La palabra del día está dentro de un elemento con id="wotd" y sólo contiene
+        un enlace a la palabra */
+        dom.Element resultados = domRespuesta.getElementById ("wotd");
+
+        if ( (resultados == null) || (resultados.children.length != 1)) {
+
+            _log.severe ("Error al interpretar el html: $html");
+            this.reason = "Error parsing html: $html";
+            return null;
+        }
+
+        dom.Node info = resultados.children [0];
+
+        palabra = Palabra (
+            info.text,
+            dataId: info.attributes ["href"],
+            enlaceRecurso: this.url + info.attributes ["href"]
+        );
+
+        if (palabra == null) {
+
+            _log.info ("No se ha podido obtener la palabra del día");
+            this.reason = "No se ha podido obtener la palabra del día\n";
+        }
+
+        return palabra;
+    }
 
 
     /**
