@@ -551,7 +551,7 @@ class Scraper {
         palabra = Palabra (
             info.text,
             dataId: info.attributes ["href"],
-            enlaceRecurso: this.url + info.attributes ["href"]
+            enlaceRecurso: info.attributes ["href"]
         );
 
         if (palabra == null) {
