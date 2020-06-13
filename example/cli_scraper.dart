@@ -1,9 +1,13 @@
 import 'package:rae_scraper/rae_scraper.dart';
-
+import 'package:logging/logging.dart';
 
 
 void main (List<String> argv) async {
 
+    Logger.root.level = Level.ALL;
+    Logger.root.onRecord.listen((record) {
+        print('${record.level.name} @ ${record.loggerName}: ${record.time}: ${record.message}');
+    });
 
     String texto_ayuda = "Uso: dart cli_scraper.dart [opciones | <PALABRA>]\n"
             + "\n"
@@ -27,37 +31,53 @@ void main (List<String> argv) async {
                 break;
 
             default:
-                Scraper a = Scraper ();
+                Scraper a = Scraper ()
+                                ..MAX_CACHE_SIZE = 20
+                ;
                 print (a.toString ());
-                a.obtenerDef (
+
+                await a.obtenerDef (
                     argv [0],
                     manejadorExcepc: (e) => print ("Excepción en petic. 1 => $e"),
                     manejadorError: (e) => print ("Excepción en petic. 1 => $e")
                 ).then (
                     (Resultado res) => (res == null)? null :  res.mostrarResultados ()
-//                ).whenComplete (
-//                    () => a.dispose ()
                 );
 
+                for (int i = 0; i <= 4; i++)  {
+                    /* Cache hit */
+                    await a.obtenerDef (
+                        "gato",
+                        manejadorExcepc: (e) => print ("Excepción en petic. 1 => $e"),
+                        manejadorError: (e) => print ("Excepción en petic. 1 => $e")
+//                  ).then (
+//                      (Resultado res) => (res == null)? null :  res.mostrarResultados ()
+//                ).whenComplete (
+//                    () => a.dispose ()
+                    );
+                }
+
                 /********************/
-               /* Segunda petición */
+                /* Segunda petición */
                 /********************/
 
                 Palabra p = Palabra (
                       "asdf", dataId: "XhbjsNo#ETrKQH3"
                 );
 
-                p.obtenerDef (
-                    a,
-                    manejadorExcepc: (e) => print ("Excepción en petic. 2 => $e"),
-                    manejadorError: (e) => print ("Excepción en petic. 2 => $e")
-                ).then (
-                    (Resultado res) => (res == null)? null :  res.mostrarResultados ()
-                ).whenComplete (
-                    () => a.dispose ()
-                );
+                for (int i = 0; i <= 4; i++)  {
+                    await p.obtenerDef (a);
+                }
 
+                for (int i = 0; i <= 4; i++)  {
+                    await a.obtenerDef ("asdf");
+                }
 
+                for (int i = 0; i <= 4; i++)  {
+                    await a.obtenerDef ("pepinillo").whenComplete (
+                        () => a.dispose ()
+                    );
+                }
         }
 
     } else {

@@ -13,6 +13,7 @@ dependencies:
   html: ^0.14.0+3
   # Serialización
   json_serializable: ^3.3.0
+  logging: ^0.11.4
 
 dev_dependencies:
   # Serialización

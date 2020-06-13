@@ -3,6 +3,7 @@ import 'dart:io' as io;
 import 'dart:convert' show Utf8Decoder, jsonDecode;
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart' as dom;
+import 'package:logging/logging.dart';
 
 import 'modelos/Entrada.dart';
 import 'modelos/Resultado.dart';
@@ -12,6 +13,8 @@ import 'modelos/Palabra.dart';
  * Scraper para obtener definiciones de la RAE.
  */
 class Scraper {
+
+    final _log = Logger ("Scraper");
 
     /**
      * Cadena con la descripción del último error producido.
@@ -58,19 +61,6 @@ class Scraper {
     /******************/
 
     /**
-     * Constructor.
-     *
-     * ¡ATENCIÓN!
-     * Es muy importante llamar al método [dispose()] al terminar, para evitar fugas de
-     * memoria y ceerrar todas las conexiones que se hayan quedado abiertas.
-     *
-     * @param url: [String]
-     *          URL base sobre la que hacer peticiones
-     */
-    Scraper.baseUrl (this.url);
-
-
-    /**
      * Constructor por defecto.
      * En este caso, la URL de base es https://dle.rae.es
      *
@@ -80,10 +70,12 @@ class Scraper {
      *
      * Dependiendo de cuál sea el recurso objetivo, es posible que sea importante que
      * 'url' no acabe en '/'
+     *
+     * @param url: [String]
+     *          URL base sobre la que hacer peticiones
+     *
      */
-    Scraper () :
-        url = "https://dle.rae.es"
-    ;
+    Scraper ({ this.url = "https://dle.rae.es" });
 
 
     /**
@@ -121,25 +113,31 @@ class Scraper {
 
         if (_cache.length >= (MAX_CACHE_SIZE - 1)) {
 
+
             /* Tiene que buscar primero la entrada más antigua y reemplazarla */
             int timestamp_antiguo = timestamp;
             String clave_antiguo = null;
 
             _cache.forEach (
-                (String clave, Map<String, dynamic> valor) {
+                (String k, Map<String, dynamic> v) {
 
                     /* Debe buscar el valor más antiguo => el que tenga menor timestamp */
-                    if (valor ["insertado"] <= timestamp_antiguo) {
+                    if (v ["insertado"] <= timestamp_antiguo) {
 
-                        clave_antiguo = clave;
+                        clave_antiguo = k;
+                        timestamp_antiguo = v ["insertado"];
                     }
                 }
             );
 
+            _log.info ("Alcanzado MAX_CACHE_SIZE ($MAX_CACHE_SIZE). "
+                    + "Se elimina la clave '$clave_antiguo'"
+            );
             _cache.removeWhere ( (k, _) => (k == clave_antiguo) );
         }
 
         _cache [clave] = { "html": html, "insertado": timestamp };
+        _log.fine ("Añadido valor en cache con clave '$clave'");
     }
 
     /**
@@ -171,10 +169,14 @@ class Scraper {
 
         if (_cache.containsKey (clave)) {
 
-            print ("Cache hit with key $clave");
+            _log.finer ("Clave encontrada en cache: '$clave'");
             return _cache [clave]["html"];
 
         } else {
+
+            _log.finer ("Clave '$clave' no encontrada en cache. "
+                    + "Realizando petición a $uri"
+            );
 
             var petic = await _cliente.getUrl (uri)
                     ..headers.add (io.HttpHeaders.userAgentHeader, this.userAgent)
@@ -223,6 +225,7 @@ class Scraper {
         /* Si no hay enlace, busca por palabra */
         if (palabra.enlaceRecurso == null) {
 
+            _log.finer ("Palabra sin enlace, buscando por texto");
             return this.obtenerDef (palabra.texto,
                 manejadorExcepc: manejadorExcepc,
                 manejadorError: manejadorError
@@ -246,14 +249,18 @@ class Scraper {
                 manejadorError (e);
             }
 
+            _log.severe (e.toString ());
             this.reason = e.toString ();
             return null;
         }
 
-        var json = jsonDecode (html);
+        Map<String,dynamic> json = jsonDecode (html);
         /* El único atributo que interesa es "html" */
         if (json ["html"] == null) {
 
+            _log.severe ("Clave 'html' no encontrada en "
+                        + "JSON de respuesta: '${json.keys}'"
+            );
             this.reason = "No such key 'html' in JSON: $json";
             return null;
         }
@@ -311,6 +318,7 @@ class Scraper {
 
         if ((res == null) || res.entradas.isEmpty) {
 
+            _log.info ("No se ha encontrado ningún resultado");
             this.reason = "¡ERROR! No se ha encontrado ningún resultado\n";
             res = null;
         }
@@ -365,6 +373,7 @@ class Scraper {
                 manejadorError (e);
             }
 
+            _log.severe (e.toString ());
             this.reason = e.toString ();
             return null;
         }
@@ -402,6 +411,7 @@ class Scraper {
 
         if ( (resultados == null) || (resultados.children.length <= 0)) {
 
+            _log.severe ("Error al interpretar el html: $html");
             this.reason = "Error parsing html: $html";
             return null;
         }
@@ -435,6 +445,7 @@ class Scraper {
 
         if ((res == null) || res.entradas.isEmpty) {
 
+            _log.info ("No se ha encontrado ningún resultado");
             this.reason = "¡ERROR! No se ha encontrado ningún resultado\n";
             res = null;
         }

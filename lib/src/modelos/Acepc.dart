@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:logging/logging.dart';
 
 import 'enums.dart';
 import 'package:html/dom.dart' as dom;
@@ -19,7 +20,6 @@ part 'Acepc.g.dart';
     explicitToJson: true
 )
 class Acepc extends Definic {
-
 
     /**
      * Número de acepción.
@@ -201,8 +201,8 @@ class Acepc extends Definic {
                     break;
 
                 default:
-                    print ("¡AVISO! TIPO DE NODO DESCONOCIDO -> "
-                        + " ${nodo.nodeType} > ${nodo}"
+                    Logger ("Acepc.claseJ").warning ("Tipo de nodo desconocido: "
+                        + "${nodo.nodeType} > $nodo"
                     );
             }
 
@@ -246,9 +246,11 @@ class Acepc extends Definic {
         /* Por ejemplo: <a class="a" href="/?id=OF9CzGo#BweCq9Y">mano de gato</a> */
         ClaseAcepc clase = ClaseAcepc.enlace;
 
-        if (par.children.length > 1) {
+        if (par.children.length != 1) {
 
-            print ("¡AVISO! LLEGARON MÁS ELEMENTOS DE LOS ESPERADOS: ${par.children}\n");
+            Logger ("Acepc.claseL").warning ("Se esperaba un elemento, llegaron "
+                + "${par.children.length}"
+            );
         }
 
         /* Se podría realizar una petición para obtener la definición; pero de momento

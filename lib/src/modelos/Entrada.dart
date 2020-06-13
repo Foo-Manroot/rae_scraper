@@ -1,5 +1,6 @@
 import 'package:html/dom.dart' as dom;
 import 'package:json_annotation/json_annotation.dart';
+import 'package:logging/logging.dart';
 
 import 'Definic.dart';
 import 'Acepc.dart';
@@ -104,7 +105,9 @@ class Entrada {
 
         } else {
 
-            print ("¡AVISO! Se esperaba sólo un elemento en 'listaN2': ${listaN2}");
+            Logger ("Entrada.article").warning ("Se esperaba un elemento en 'listaN2', "
+                + "llegaron ${listaN2.length}"
+            );
         }
 
 
