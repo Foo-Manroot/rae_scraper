@@ -318,7 +318,7 @@ class Scraper {
             }
         }
 
-        Resultado res = new Resultado (entradas, otras);
+        Resultado res = new Resultado (palabra, entradas, otras);
 
         if ((res == null) || res.entradas.isEmpty) {
 
@@ -445,7 +445,7 @@ class Scraper {
             }
         }
 
-        Resultado res = new Resultado (entradas, otras);
+        Resultado res = new Resultado (Palabra (palabra), entradas, otras);
 
         if ((res == null) || res.entradas.isEmpty) {
 

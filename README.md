@@ -45,6 +45,7 @@ El resultado que se devuelve es una instancia de la clase `Resultado` (en un `Fu
 Este resultado tiene los siguientes atributos (se puede consultar con más detalle el código fuente en `lib/src/modelos/Resultado.dart`):
   - `List<Entrada> entradas`: Lista de entradas aplicables a esta palabra
   - `List<String> otras`: Enlaces a otras entradas similares
+  - `Palabra palabra`: Palabra a la que corresponden estas acepciones
 
 
 Por su parte, `Entrada` tiene los siguientes atributos:

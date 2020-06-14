@@ -1,13 +1,13 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'dart:io';
 
-import 'Entrada.dart';
-import 'Definic.dart';
-
-import 'enums.dart';
 import 'Acepc.dart';
+import 'Definic.dart';
+import 'Entrada.dart';
 import 'Expr.dart';
+import 'Palabra.dart';
 import 'Uso.dart';
+import 'enums.dart';
 
 /* Para la serialización */
 part 'Resultado.g.dart';
@@ -33,6 +33,12 @@ class Resultado {
     @JsonKey(required: true)
     final List<String> otras;
 
+    /**
+     * Palabra a partir de la cual se ha generado esta entrada
+     */
+    @JsonKey(required: true)
+    final Palabra palabra;
+
     /*******************/
     /** SERIALIZACIÓN **/
     /*******************/
@@ -54,7 +60,9 @@ class Resultado {
      * Constructor por defecto.
      * Simplemente inicializa los atributos con los valores proporcionados.
      */
-    Resultado (List<Entrada> this.entradas, List<String> this.otras);
+    Resultado (
+        Palabra this.palabra, List<Entrada> this.entradas, List<String> this.otras
+    );
 
 
 
