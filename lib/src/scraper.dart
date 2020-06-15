@@ -466,15 +466,25 @@ class Scraper {
      */
     Future<List<String>> obtenerSugerencias (String sub) async {
 
-        String resultado = await _realizarGet (this.url + "/srv/keys?q=" + sub);
+        String resultado = (
+            await _realizarGet (this.url + "/srv/keys?q=" + sub)
+        ).trim ();
         List<String> lista = [];
 
-        try {
+        /* Si no se encuentran resultados, no se devuelve una lista, sino un HTML con el
+        mensaje de error */
+        if (resultado [0] == "[") {
 
-            lista = jsonDecode (resultado).cast <String>();
+            try {
 
-        } catch (e) {
-            _log.warning ("No se pudo decodificar en JSON: '$e'");
+                lista = jsonDecode (resultado).cast <String>();
+
+            } catch (e) {
+                _log.warning ("No se pudo decodificar en JSON: '$e'");
+            }
+        } else {
+
+            _log.fine ("La respuesta no es una lista JSON");
         }
 
         return lista;
