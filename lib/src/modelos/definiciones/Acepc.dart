@@ -1,12 +1,11 @@
+import 'package:html/dom.dart' as dom;
 import 'package:json_annotation/json_annotation.dart';
 import 'package:logging/logging.dart';
 
-import 'enums.dart';
-import 'package:html/dom.dart' as dom;
-
-import 'Palabra.dart';
+import '../Palabra.dart';
+import '../Uso.dart';
+import '../enums.dart';
 import 'Definic.dart';
-import 'Uso.dart';
 
 
 /* Para la serialización */

@@ -1,13 +1,14 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'dart:io';
 
-import 'Acepc.dart';
-import 'Definic.dart';
 import 'Entrada.dart';
-import 'Expr.dart';
 import 'Palabra.dart';
 import 'Uso.dart';
+import 'definiciones/Acepc.dart';
+import 'definiciones/Definic.dart';
+import 'definiciones/Expr.dart';
 import 'enums.dart';
+import 'verbos/Conjug.dart';
 
 /* Para la serialización */
 part 'Resultado.g.dart';
@@ -39,6 +40,14 @@ class Resultado {
     @JsonKey(required: true)
     final Palabra palabra;
 
+
+    /**
+     * Conjugación, si es que se trata de un verbo
+     */
+    @JsonKey(required:false)
+    final Conjug conjug;
+
+
     /*******************/
     /** SERIALIZACIÓN **/
     /*******************/
@@ -61,7 +70,8 @@ class Resultado {
      * Simplemente inicializa los atributos con los valores proporcionados.
      */
     Resultado (
-        Palabra this.palabra, List<Entrada> this.entradas, List<String> this.otras
+        Palabra this.palabra, List<Entrada> this.entradas, List<String> this.otras,
+        { Conjug this.conjug = null }
     );
 
 

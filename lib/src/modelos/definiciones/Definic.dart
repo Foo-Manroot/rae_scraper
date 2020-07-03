@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import 'enums.dart';
+import '../enums.dart';
 import 'Acepc.dart';
 import 'Expr.dart';
 

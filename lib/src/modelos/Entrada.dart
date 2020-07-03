@@ -2,9 +2,9 @@ import 'package:html/dom.dart' as dom;
 import 'package:json_annotation/json_annotation.dart';
 import 'package:logging/logging.dart';
 
-import 'Definic.dart';
-import 'Acepc.dart';
-import 'Expr.dart';
+import 'definiciones/Definic.dart';
+import 'definiciones/Acepc.dart';
+import 'definiciones/Expr.dart';
 
 /* Para la serialización */
 part 'Entrada.g.dart';

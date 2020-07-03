@@ -1,7 +1,7 @@
-import 'package:json_annotation/json_annotation.dart';
 import 'package:html/dom.dart' as dom;
+import 'package:json_annotation/json_annotation.dart';
 
-import 'enums.dart';
+import '../enums.dart';
 import 'Acepc.dart';
 import 'Definic.dart';
 
