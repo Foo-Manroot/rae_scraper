@@ -123,6 +123,7 @@ class Entrada {
 
             switch (claseCss) {
                 case "j":
+                case "j1":
                 case "j2":
                     /* Acepción normal */
                     defs.add (new Acepc.claseJ (elem));

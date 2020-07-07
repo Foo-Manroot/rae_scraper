@@ -217,7 +217,7 @@ class Acepc extends Definic {
     }
 
     /**
-     * Constructor para las acepciones con class="j" o class="j2".
+     * Constructor para las acepciones con class="m".
      * Extrae la información necesaria del elemento de tipo [dom.Element]
      *
      * Para otros tipos de acepciones, ver [Acepc.claseJ()] y [Acepc.claseL()]
