@@ -160,8 +160,10 @@ class Resultado {
     String toString () {
 
         return "Atributos de esta instancia de 'Resultado':\n"
-            + "=> Entradas: ${this.entradas}\n"
-            + "=> Otras entradas: ${this.otras}\n"
+            + "=> Palabra: $palabra\n"
+            + "=> Entradas: $entradas\n"
+            + "=> Conjugación: $conjug\n"
+            + "=> Otras entradas: $otras\n"
         ;
     }
 

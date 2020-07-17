@@ -17,6 +17,9 @@ Resultado _$ResultadoFromJson(Map<String, dynamic> json) {
             e == null ? null : Entrada.fromJson(e as Map<String, dynamic>))
         ?.toList(),
     (json['otras'] as List)?.map((e) => e as String)?.toList(),
+    conjug: json['conjug'] == null
+        ? null
+        : Conjug.fromJson(json['conjug'] as Map<String, dynamic>),
   );
 }
 
@@ -24,4 +27,5 @@ Map<String, dynamic> _$ResultadoToJson(Resultado instance) => <String, dynamic>{
       'entradas': instance.entradas?.map((e) => e?.toJson())?.toList(),
       'otras': instance.otras,
       'palabra': instance.palabra?.toJson(),
+      'conjug': instance.conjug?.toJson(),
     };

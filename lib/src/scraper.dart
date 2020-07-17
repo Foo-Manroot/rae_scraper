@@ -8,6 +8,7 @@ import 'package:logging/logging.dart';
 import 'modelos/Entrada.dart';
 import 'modelos/Resultado.dart';
 import 'modelos/Palabra.dart';
+import 'modelos/verbos/Conjug.dart';
 
 /**
  * Scraper para obtener definiciones de la RAE.
@@ -420,6 +421,7 @@ class Scraper {
             return null;
         }
 
+        Conjug conjug;
         List<Entrada> entradas = [];
         List<String> otras = [];
         for (dom.Element elem in resultados.children) {
@@ -440,12 +442,21 @@ class Scraper {
                                 otras.add (enlace.attributes ["href"]);
                             }
                         }
+                    } else {
+
+                        if (elem.id == "conjugacion") {
+
+                            conjug = Conjug.fromDiv (elem);
+                        }
                     }
+
                     break;
             }
         }
 
-        Resultado res = new Resultado (Palabra (palabra), entradas, otras);
+        Resultado res = new Resultado (
+            Palabra (palabra), entradas, otras, conjug: conjug
+        );
 
         if ((res == null) || res.entradas.isEmpty) {
 
